@@ -1,5 +1,12 @@
 package com.example.piotr.movies;
 
+import android.app.LoaderManager;
+import android.content.ContentValues;
+import android.content.CursorLoader;
+import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,10 +19,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
+import com.example.piotr.movies.domain.MoviesContract;
+
 public class MoviesListActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor> {
+    SimpleCursorAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +35,6 @@ public class MoviesListActivity extends AppCompatActivity
         setContentView(R.layout.activity_movies_list);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -34,6 +45,15 @@ public class MoviesListActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        getLoaderManager().initLoader(0, null, this);
+
+        ListView   listView =(ListView)  findViewById(R.id.movies_list);
+        mAdapter = new SimpleCursorAdapter(this,
+                android.R.layout.simple_list_item_2, null,
+                new String[] { MoviesContract.MovieEntry.COLUMN_TITLE, MoviesContract.MovieEntry.COLUMN_DIRECTOR},
+                new int[] { android.R.id.text1, android.R.id.text2 }, 0);
+        listView.setAdapter(mAdapter);
     }
 
     @Override
@@ -74,22 +94,42 @@ public class MoviesListActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        if (id == R.id.add_movie) {
+            Intent intent = new Intent(this, AddMovieActivity.class);
+            startActivity(intent);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        Uri uri = MoviesContract.MovieEntry.CONTENT_URI;
+
+
+        return new CursorLoader(this,
+                uri,
+                null,
+                null,
+                null,
+                null);
+
+
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mAdapter.swapCursor(data);
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
+
+
     }
 }
